@@ -233,7 +233,7 @@ export const SUNDAY: Journey = {
       art: 'airport',
       tod: 1,
       title: 'Welcome home',
-      narration: 'Changi Airport at 3am. The Jewel waterfall is glowing, the air smells like home, and it is 28 degrees again. Your jackets are now a problem.',
+      narration: 'Changi Airport at 3am. The Jewel waterfall is glowing, the air smells like haze, and it is 28 degrees again. Your jackets are now a problem.',
       prompt: 'First thing you do?',
       interaction: {
         kind: 'cards',

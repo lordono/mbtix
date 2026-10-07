@@ -231,7 +231,7 @@ export const MONDAY: Journey = {
         options: [
           { label: "Say no more, I'm coming! 🍻", w: { E: 3, P: 1 } },
           { label: 'Monday leh… I go home and rest 😴', w: { I: 3, S: 0.5 } },
-          { label: 'One drink, then I go home ok. Actually one.', w: { E: 1, J: 1.5 } },
+          { label: 'One drink, then I go home ok. Just one...', w: { E: 1, J: 1.5 } },
           { label: 'Can I bring my friend from the other team?', w: { E: 2, F: 1 } },
         ],
       },

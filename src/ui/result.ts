@@ -49,7 +49,7 @@ export function renderResult(host: HTMLElement, r: Result, name: string, journey
     `<div class="card"><h2>💘 Date-able types</h2><p class="muted">Types most likely to make your days better</p>${p.partner.map(matchCard).join('')}</div>` +
     `</div>` +
     `<div class="actions"><button class="cta" data-act="copy">Copy my result 📋</button><button class="cta ghost" data-act="again">Try another day ↺</button></div>` +
-    `<p class="fineprint">For fun only, not a clinical assessment. Like checking the weather app before you leave: helpful, never the final word.</p>` +
+    `<p class="fineprint">For fun only, not a clinical assessment. Like checking the weather app before you leave: helpful but never the final word.</p>` +
     `</section>`
 
   const tl = gsap.timeline()
