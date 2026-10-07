@@ -20,6 +20,8 @@ export interface SliderEnd {
   label: string
   emoji: string
   pole: Pole
+  /** Smaller side-signals on other axes, scaled by how far you slide towards this end. */
+  also?: Weights
 }
 
 export interface DropZone extends Choice {

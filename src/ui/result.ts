@@ -13,13 +13,14 @@ export function renderResult(host: HTMLElement, r: Result, name: string, journey
       const rightPct = 100 - a.leftPct
       const leftWin = a.winner === a.left
       const drivers = a.drivers.length
-        ? `<ul class="drivers">${a.drivers.map((d) => `<li>“${escapeHtml(d.summary)}”</li>`).join('')}</ul>`
+        ? `<ul class="drivers">${a.drivers.map((d) => `<li>“${escapeHtml(d.summary.replace(/^["“]|["”]$/g, ''))}”</li>`).join('')}</ul>`
         : ''
       return (
         `<div class="axis">` +
         `<div class="axis-labels"><span class="${leftWin ? 'win' : ''}"><b>${a.left}</b> ${a.leftName} <em>${a.leftPct}%</em></span>` +
         `<span class="${leftWin ? '' : 'win'}"><em>${rightPct}%</em> ${a.rightName} <b>${a.right}</b></span></div>` +
         `<div class="axis-bar"><div class="axis-fill left ${leftWin ? 'win' : ''}" data-w="${a.leftPct}"></div><div class="axis-fill right ${leftWin ? '' : 'win'}" data-w="${rightPct}"></div></div>` +
+        `<p class="axis-meta"><span class="clarity c-${a.clarity.replace(' ', '-').toLowerCase()}">${a.clarity} ${a.winner}</span> · from ${a.signals} of your choices</p>` +
         drivers +
         `</div>`
       )
@@ -42,10 +43,10 @@ export function renderResult(host: HTMLElement, r: Result, name: string, journey
     `<div class="card"><p class="blurb">${p.blurb}</p>` +
     `<div class="facts"><div><span>📍 Natural habitat</span>${p.habitat}</div><div><span>🍜 Signature order</span>${p.order}</div></div>` +
     `<div class="chips">${p.strengths.map((s) => `<span>${s}</span>`).join('')}</div></div>` +
-    `<div class="card"><h2>How your day added up</h2><p class="muted">Every choice nudged one or two of these sliders. Here's the final split, and the moments that gave you away.</p>${bars}</div>` +
+    `<div class="card"><h2>How your day added up</h2><p class="muted">Every choice leaned mainly one way and nudged a few others, so each split below draws on most of your day. Here's where you landed, and the moments that gave you away.</p>${bars}</div>` +
     `<div class="match-grid">` +
     `<div class="card"><h2>💼 Work kakis</h2><p class="muted">Types that bring out your best at work</p>${p.career.map(matchCard).join('')}</div>` +
-    `<div class="card"><h2>💘 Date-able types</h2><p class="muted">Types most likely to make your Saturdays better</p>${p.partner.map(matchCard).join('')}</div>` +
+    `<div class="card"><h2>💘 Date-able types</h2><p class="muted">Types most likely to make your days better</p>${p.partner.map(matchCard).join('')}</div>` +
     `</div>` +
     `<div class="actions"><button class="cta" data-act="copy">Copy my result 📋</button><button class="cta ghost" data-act="again">Try another day ↺</button></div>` +
     `<p class="fineprint">For fun only, not a clinical assessment. Like checking the weather app before you leave: helpful, never the final word.</p>` +

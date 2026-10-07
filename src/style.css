@@ -371,6 +371,9 @@ h2 { margin: 0 0 6px; font-size: 1.35rem; }
 .axis:nth-of-type(1) .axis-fill.win { background: var(--coral); }
 .axis:nth-of-type(2) .axis-fill.win { background: var(--yellow); }
 .axis:nth-of-type(4) .axis-fill.win { background: var(--purple); }
+.axis-meta { margin: 6px 0 0; font-size: .78rem; color: var(--muted); }
+.clarity { font-weight: 800; color: var(--ink); }
+.c-very-clear, .c-clear { color: #1f7a6d; }
 .drivers { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .drivers li { font-size: .8rem; background: var(--cream); border: 2px solid var(--ink); border-radius: 10px; padding: 4px 8px; }
 
@@ -383,6 +386,16 @@ h2 { margin: 0 0 6px; font-size: 1.35rem; }
 .match p { margin: 4px 0 0; font-size: .9rem; line-height: 1.45; }
 .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .fineprint { text-align: center; font-size: .75rem; color: var(--ink); opacity: .7; margin: 0; background: rgba(255,255,255,.6); padding: 8px 12px; border-radius: 12px; }
+
+/* ───── Sound toggle ───── */
+.sound-toggle {
+  position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 45;
+  width: 48px; height: 48px; border-radius: 50%; border: 3px solid var(--ink); background: var(--paper);
+  box-shadow: 3px 3px 0 var(--ink); font-size: 1.3rem; display: grid; place-items: center; padding: 0;
+  transition: transform .12s, box-shadow .12s;
+}
+.sound-toggle:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.sound-toggle[aria-pressed='true'] { background: #e6e1ea; }
 
 /* ───── Entrances (CSS, not GSAP: see enter() in interactions.ts) ───── */
 .enter { animation: rise .45s cubic-bezier(.3, 1.4, .5, 1) backwards; }
@@ -414,7 +427,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 /* ───── Phone: full-bleed, app-like screens ───── */
 @media (max-width: 640px) {
   :root { --gap: 12px; --radius: 18px; }
-  #app { padding: 0 0 calc(28px + env(safe-area-inset-bottom)); gap: 14px; min-height: 100dvh; }
+  #app { padding: 0 0 calc(84px + env(safe-area-inset-bottom)); gap: 14px; min-height: 100dvh; }
 
   /* Screens go edge to edge; the ink outline stays only top and bottom. */
   .intro.card, .card.scene, .computing.card {

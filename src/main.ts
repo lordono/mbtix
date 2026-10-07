@@ -9,6 +9,7 @@ import { avatarSvg, headSvg, paint, type Look } from './art/scenes'
 import { C, type HairStyle } from './art/kit'
 import { mount } from './ui/interactions'
 import { renderResult } from './ui/result'
+import { audio } from './audio/audio'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 const world = new World(document.querySelector<HTMLCanvasElement>('#world')!)
@@ -62,6 +63,7 @@ function ticket(j: Journey): string {
 
 function intro() {
   world.setFireworks(false)
+  audio.play('home')
   useJourney(state.journey)
   gsap.to(world, { tod: 0, duration: 1.2 })
   app.innerHTML =
@@ -98,6 +100,7 @@ function intro() {
     if (!b) return
     useJourney(JOURNEYS.find((j) => j.id === b.dataset.journey)!)
     haptic()
+    audio.sfx('tap')
     app.querySelectorAll<HTMLElement>('.ticket').forEach((t) => {
       const on = t === b
       t.classList.toggle('on', on)
@@ -116,6 +119,7 @@ function intro() {
     })
     app.querySelectorAll<HTMLElement>('[data-shirt]').forEach((b) => b.classList.toggle('on', b.dataset.shirt === state.look.shirt))
     haptic()
+    audio.sfx('tap')
   }
   app.querySelector('#hair')!.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-hair]')
@@ -130,7 +134,7 @@ function intro() {
     state.answers = []
     state.index = 0
     haptic(20)
-    doors(state.journey.scenes[0].station, () => renderScene())
+    doors(state.journey.scenes[0].station, () => renderScene(), true)
   })
 
   gsap.from('.intro > *', { y: 30, opacity: 0, stagger: 0.06, duration: 0.6, ease: 'power3.out' })
@@ -157,6 +161,7 @@ function renderScene() {
   const { scenes } = state.journey
   const scene = scenes[state.index]
   gsap.to(world, { tod: scene.tod, duration: 2, ease: 'sine.inOut' })
+  audio.play(state.journey.id)
 
   app.innerHTML =
     progress() +
@@ -192,9 +197,11 @@ function renderScene() {
 }
 
 /** MRT-door wipe between scenes: "Next station…". */
-function doors(station: string, then: () => void) {
+function doors(station: string, then: () => void, first = false) {
   const el = document.querySelector<HTMLElement>('#doors')!
   el.querySelector('.door-msg')!.innerHTML = `<small>Next station</small>${escapeHtml(station)}`
+  // Proper MRT beeps once, as the journey departs; softer rotating chimes after that.
+  audio.sfx(first ? 'doorBeeps' : 'doorClose')
   gsap.timeline()
     .set(el, { display: 'block' })
     .fromTo('.door.l', { xPercent: -100 }, { xPercent: 0, duration: 0.45, ease: 'power3.in' })
@@ -203,6 +210,7 @@ function doors(station: string, then: () => void) {
     .call(then)
     .to({}, { duration: 0.45 })
     .to('.door-msg', { opacity: 0, duration: 0.15 })
+    .call(() => audio.sfx('doorOpen'))
     .to('.door.l', { xPercent: -100, duration: 0.5, ease: 'power3.out' })
     .to('.door.r', { xPercent: 100, duration: 0.5, ease: 'power3.out' }, '<')
     .set(el, { display: 'none' })
@@ -214,13 +222,30 @@ function finish() {
   gsap.from('.computing', { scale: 0.9, opacity: 0, duration: 0.4 })
   gsap.to('.kopi-spin', { rotation: 360, repeat: -1, duration: 1.2, ease: 'none' })
   world.setFireworks(true)
+  audio.play('results')
   gsap.delayedCall(1.8, () => {
+    audio.sfx('fanfare')
     gsap.killTweensOf('.kopi-spin')
     renderResult(app, score(state.answers), state.name, state.journey, avatarSvg(state.look, 110), () => doors('Home', intro))
     haptic(40)
     window.scrollTo({ top: 0 })
   })
 }
+
+/* ───────────── Sound toggle ───────────── */
+
+const soundBtn = document.querySelector<HTMLButtonElement>('#sound')!
+audio.onChange((muted) => {
+  soundBtn.textContent = muted ? '🔇' : '🔊'
+  soundBtn.setAttribute('aria-label', muted ? 'Turn sound on' : 'Mute sound')
+  soundBtn.setAttribute('aria-pressed', String(muted))
+})
+soundBtn.addEventListener('click', () => audio.toggle())
+// "M" toggles sound, unless you're typing your name.
+window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'm' && !(e.target as HTMLElement).closest('input, textarea')) audio.toggle()
+})
+world.onBurst = () => audio.sfx('firework')
 
 /* ───────────── Singlish tooltips ───────────── */
 
@@ -261,6 +286,6 @@ document.addEventListener(
 window.addEventListener('scroll', hideTip, { passive: true })
 
 // Handy for poking at the journey from devtools during development.
-if (import.meta.env.DEV) Object.assign(window, { gsap, world, state })
+if (import.meta.env.DEV) Object.assign(window, { gsap, world, state, audio })
 
 intro()

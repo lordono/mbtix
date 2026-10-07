@@ -96,6 +96,8 @@ export class World {
   private timer = new THREE.Timer()
   private fireworksOn = false
   private nextFirework = 0
+  /** Called whenever a firework bursts (used for the pop sound). */
+  onBurst?: () => void
   /** Time of day, 0 = dawn, 1 = night. Tween this. */
   tod = 0
 
@@ -321,6 +323,7 @@ export class World {
     const points = new THREE.Points(geo, mat)
     this.scene.add(points)
     this.sparks.push({ points, velocities, age: 0, life: 2.2 })
+    this.onBurst?.()
   }
 
   private tick() {

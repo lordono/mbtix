@@ -24,7 +24,8 @@ pnpm build      # type-check + production build into dist/
   - `chat`: a WhatsApp-style thread types out, then you pick a reply
   - `slider`: a graded answer, so a 70/30 lean counts as 70/30
   - `drag`: drag your avatar to where you'd stand in the MRT carriage
-  - `timer`: a sudden thunderstorm, decide before you're soaked (hesitating counts too)
+  - `timer`: a sudden thunderstorm, decide in 10.5 seconds before you're soaked (hesitating counts too)
+- **Sound**: a different cartoon theme for the home page, each day and the results (ukulele + glockenspiel, swingy office jazz, tropical steel drum, Japanese koto + taiko, a brass fanfare), plus sound effects: MRT door beeps and arrival chime, chat blips, a boing for drag-and-drop, clock ticks and a sad trombone for the timer, firework pops. All synthesised live with the Web Audio API (no audio files), mixed quietly, starting after the first tap. Toggle with the 🔊 button or the `M` key; the choice is remembered.
 - **Singlish glossary**: hover or tap any underlined word (*chope*, *shiok*, *belanja*…).
 - **3D world**: a toon-shaded skyline. Singapore days show Marina Bay Sands, the Supertrees and the Flyer; the Tokyo day swaps in Tokyo Tower and Mt Fuji. The sky moves from dawn to night as your day goes on, and fireworks go off on the results screen.
 - **Mobile**: under 640px the app becomes full-screen like a native app: a sticky top bar, edge-to-edge illustrations, single-column choices, tap lists for drag scenes, safe-area padding, haptic taps and a lighter 3D renderer. It can be added to the home screen (web app manifest).
@@ -53,7 +54,11 @@ src/
 
 ### Tuning the test
 
-Each choice carries weights such as `{ E: 2, T: 1 }`. Sliders split their `weight` between the two poles by position. Per axis: `leftPct = (left + 0.5) / (left + right + 1)`. To rebalance, edit weights in `data/journeys/`. Keep each axis covered by at least 3 scenes per journey. To add a new day, create a `Journey` file, add it to `journeys/index.ts`, and reuse painters (they take a `sceneId` for variants).
+Each answer has one **main lean** (2–3 points) plus small **side-signals** (0.5–1) on other axes, e.g. `{ E: 3, F: 0.5, P: 0.5 }`. So every axis collects evidence from most scenes (typically 5–10 of 12–14), not just the 3 written for it, which makes the result steadier for the same number of questions. Sliders split their `weight` between the two poles by position, and an end's `also` side-signals count once you lean clearly past the middle.
+
+Per axis: `leftPct = (left + 1) / (left + right + 2)`. The results show a clarity label (Slight / Moderate / Clear / Very clear) and how many choices fed each axis.
+
+When editing weights in `data/journeys/`, keep two things true: (1) a player who consistently picks the answers that fit a type should end up with that type, for all 16 types; (2) random clicking should land near 50/50 on each axis (currently 43–56%). Point side-signals in different directions across a scene's options so they don't pile up on one side. To add a new day, create a `Journey` file, add it to `journeys/index.ts`, and reuse painters (they take a `sceneId` for variants).
 
 ### Illustrations
 

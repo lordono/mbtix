@@ -1,7 +1,8 @@
 import gsap from 'gsap'
 import { Draggable } from 'gsap/Draggable'
-import type { Answer, Choice, Interaction, Scene } from '../data/model'
+import type { Answer, Choice, Interaction, Pole, Scene, Weights } from '../data/model'
 import { glossaryHtml, plain } from '../data/glossary'
+import { audio } from '../audio/audio'
 
 gsap.registerPlugin(Draggable)
 
@@ -71,6 +72,7 @@ function cards(ctx: Ctx, options: Choice[], onPick?: () => void): () => void {
       onPick?.()
       btn.classList.add('picked')
       grid.classList.add('locked')
+      audio.sfx('pick')
       gsap.delayedCall(0.7, () => ctx.done(answer(ctx, o)))
     })
     grid.append(btn)
@@ -98,6 +100,7 @@ function chat(ctx: Ctx, it: Extract<Interaction, { kind: 'chat' }>): () => void 
     const b = h(`<div class="bubble ${mine ? 'mine' : ''}">${html}${mine ? '<span class="ticks">✓✓</span>' : ''}</div>`)
     body.append(b)
     body.scrollTop = body.scrollHeight
+    audio.sfx(mine ? 'msgOut' : 'msgIn')
     gsap.from(b, { y: 12, opacity: 0, scale: 0.9, transformOrigin: mine ? '100% 100%' : '0% 100%', duration: 0.3, ease: 'back.out(2)' })
   }
 
@@ -157,6 +160,7 @@ function slider(ctx: Ctx, it: Extract<Interaction, { kind: 'slider' }>): () => v
     const v = Number(range.value) / 100
     const label = it.ticks[Math.min(it.ticks.length - 1, Math.round(v * (it.ticks.length - 1)))]
     if (tick.dataset.label !== label) {
+      if (tick.dataset.label) audio.sfx('slide')
       tick.dataset.label = label
       tick.textContent = label
       gsap.fromTo(tick, { y: 4, opacity: 0.4 }, { y: 0, opacity: 1, duration: 0.2, ease: 'power2.out' })
@@ -172,8 +176,15 @@ function slider(ctx: Ctx, it: Extract<Interaction, { kind: 'slider' }>): () => v
   el.querySelector('button')!.addEventListener('click', (e) => {
     ;(e.currentTarget as HTMLButtonElement).disabled = true
     range.disabled = true
+    audio.sfx('pick')
     const v = Number(range.value) / 100
-    const w = { [it.left.pole]: it.weight * (1 - v), [it.right.pole]: it.weight * v }
+    const w: Weights = { [it.left.pole]: it.weight * (1 - v), [it.right.pole]: it.weight * v }
+    // Side-signals only count once you clearly lean one way (past the middle 20%).
+    const add = (extra: Weights | undefined, share: number) => {
+      for (const [p, x] of Object.entries(extra ?? {}) as [Pole, number][]) w[p] = (w[p] ?? 0) + x * share
+    }
+    add(it.left.also, Math.max(0, (0.4 - v) / 0.4))
+    add(it.right.also, Math.max(0, (v - 0.6) / 0.4))
     gsap.to(el, { scale: 0.98, yoyo: true, repeat: 1, duration: 0.12, onComplete: () => ctx.done({ sceneId: ctx.scene.id, summary: tick.textContent ?? '', w }) })
   })
   ctx.host.append(el)
@@ -222,6 +233,7 @@ function drag(ctx: Ctx, it: Extract<Interaction, { kind: 'drag' }>): () => void 
     gsap.to(token, {
       x: `+=${dx}`, y: `+=${dy}`, duration: 0.45, ease: 'back.out(1.8)',
       onComplete: () => {
+        audio.sfx('boing')
         gsap.to(token, { scale: 1.2, yoyo: true, repeat: 1, duration: 0.15 })
         gsap.delayedCall(0.7, () => ctx.done(answer(ctx, it.zones[i])))
       },
@@ -252,25 +264,33 @@ function drag(ctx: Ctx, it: Extract<Interaction, { kind: 'drag' }>): () => void 
 }
 
 function timer(ctx: Ctx, it: Extract<Interaction, { kind: 'timer' }>): () => void {
-  const bar = h(`<div class="timer"><div class="timer-fill"></div><span class="timer-label">${it.seconds}s</span></div>`)
+  const bar = h(`<div class="timer"><div class="timer-fill"></div><span class="timer-label">${Math.ceil(it.seconds)}s</span></div>`)
   ctx.host.append(bar)
   const fill = bar.querySelector<HTMLElement>('.timer-fill')!
   const label = bar.querySelector<HTMLElement>('.timer-label')!
   const state = { left: it.seconds }
+  let shown = Math.ceil(it.seconds)
   const countdown = gsap.to(state, {
     left: 0,
     duration: it.seconds,
     ease: 'none',
     onUpdate: () => {
       fill.style.width = `${(state.left / it.seconds) * 100}%`
-      label.textContent = `${Math.ceil(state.left)}s`
+      const secs = Math.ceil(state.left)
+      if (secs !== shown) {
+        shown = secs
+        // Clock ticks every second, and get more insistent near the end.
+        audio.sfx(secs <= 3 ? 'tickUrgent' : 'tick')
+      }
+      label.textContent = `${secs}s`
       bar.classList.toggle('urgent', state.left < 3)
     },
     onComplete: () => {
       stopCards()
       label.textContent = 'Too slow! 💦'
+      audio.sfx('womp')
       ctx.host.querySelector('.cards')?.classList.add('locked')
-      gsap.delayedCall(1, () => ctx.done(answer(ctx, it.timeout)))
+      gsap.delayedCall(1.4, () => ctx.done(answer(ctx, it.timeout)))
     },
   })
   const stopCards = cards(ctx, it.options, () => countdown.kill())
